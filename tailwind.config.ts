@@ -24,6 +24,11 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				
+				/* Professional Brand Colors */
+				'brand-primary': 'hsl(var(--brand-primary))',
+				'brand-secondary': 'hsl(var(--brand-secondary))',
+				'brand-accent': 'hsl(var(--brand-accent))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'

@@ -9,7 +9,26 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 218 18% 12%;
+    
+    /* Professional Interview Platform Colors */
+    --brand-primary: 215 100% 50%;
+    --brand-secondary: 254 88% 68%;
+    --brand-accent: 174 100% 35%;
+    
+    /* Professional Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215 100% 50%), hsl(254 88% 68%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 97%));
+    --gradient-success: linear-gradient(135deg, hsl(174 100% 35%), hsl(142 76% 36%));
+    
+    /* Professional Shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(215 100% 50% / 0.3);
+    --shadow-card: 0 4px 20px -4px hsl(215 28% 17% / 0.12);
+    --shadow-premium: 0 20px 60px -10px hsl(254 88% 68% / 0.4);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -17,11 +36,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 215 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 218 18% 12%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -102,4 +121,86 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Professional Animation Classes */
+@layer components {
+  .hero-button {
+    @apply relative overflow-hidden bg-gradient-to-r from-primary to-brand-secondary text-primary-foreground font-semibold px-8 py-4 rounded-xl shadow-elegant transition-all duration-300 hover:shadow-premium hover:scale-105 active:scale-95;
+  }
+  
+  .hero-button::before {
+    @apply content-[''] absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 transition-opacity duration-300;
+  }
+  
+  .hero-button:hover::before {
+    @apply opacity-100;
+  }
+  
+  .feature-card {
+    @apply bg-gradient-to-br from-white to-secondary/50 backdrop-blur-sm border border-white/20 rounded-2xl p-8 shadow-card transition-all duration-500 hover:shadow-premium hover:-translate-y-2;
+  }
+  
+  .premium-badge {
+    @apply bg-gradient-to-r from-brand-secondary to-brand-accent text-white px-4 py-2 rounded-full text-sm font-semibold shadow-elegant;
+  }
+  
+  .slide-in-up {
+    @apply animate-[slideInUp_0.6s_ease-out_forwards];
+  }
+  
+  .fade-in-delayed {
+    @apply animate-[fadeIn_0.8s_ease-out_0.3s_both];
+  }
+  
+  .float-animation {
+    @apply animate-[float_6s_ease-in-out_infinite];
+  }
+}
+
+/* Advanced Keyframe Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
