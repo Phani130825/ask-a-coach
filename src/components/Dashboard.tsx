@@ -14,7 +14,11 @@ import {
   Video
 } from "lucide-react";
 
-const Dashboard = () => {
+interface DashboardProps {
+  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics') => void;
+}
+
+const Dashboard = ({ onNavigate }: DashboardProps) => {
   const modules = [
     {
       id: 1,
@@ -172,6 +176,24 @@ const Dashboard = () => {
                           variant={getButtonVariant(module.status)}
                           size="sm"
                           disabled={module.status === 'locked'}
+                          onClick={() => {
+                            if (module.status === 'ready') {
+                              switch (module.id) {
+                                case 1:
+                                  onNavigate('upload');
+                                  break;
+                                case 2:
+                                  onNavigate('tailoring');
+                                  break;
+                                case 3:
+                                  onNavigate('interview');
+                                  break;
+                                case 4:
+                                  onNavigate('analytics');
+                                  break;
+                              }
+                            }
+                          }}
                         >
                           {module.status === 'ready' ? 'Start' :
                            module.status === 'completed' ? 'Review' : 'Locked'}

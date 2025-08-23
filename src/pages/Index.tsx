@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -7,21 +7,44 @@ import ResumeUpload from "@/components/ResumeUpload";
 import ResumeTailoring from "@/components/ResumeTailoring";
 import InterviewSimulation from "@/components/InterviewSimulation";
 import PerformanceAnalytics from "@/components/PerformanceAnalytics";
+import Login from "@/components/Login";
+import Register from "@/components/Register";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
-type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics';
+type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'login' | 'register';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
+  const [activeResumeId, setActiveResumeId] = useState<string | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Handle authentication state changes
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && (currentView === 'login' || currentView === 'register')) {
+      setCurrentView('dashboard');
+    }
+  }, [isAuthenticated, isLoading, currentView]);
 
   const renderCurrentView = () => {
     switch (currentView) {
+      case 'login':
+        return <Login onSwitchToRegister={() => setCurrentView('register')} />;
+      case 'register':
+        return <Register onSwitchToLogin={() => setCurrentView('login')} />;
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onNavigate={setCurrentView} />;
       case 'upload':
-        return <ResumeUpload />;
+        return (
+          <ResumeUpload
+            onUploaded={(id: string) => {
+              setActiveResumeId(id);
+              setCurrentView('tailoring');
+            }}
+          />
+        );
       case 'tailoring':
-        return <ResumeTailoring />;
+        return <ResumeTailoring resumeId={activeResumeId ?? undefined} />;
       case 'interview':
         return <InterviewSimulation />;
       case 'analytics':
@@ -29,7 +52,6 @@ const Index = () => {
       default:
         return (
           <div className="min-h-screen bg-white">
-            <Header />
             <Hero />
             <Features />
             
@@ -163,23 +185,12 @@ const Index = () => {
   };
 
   // Add navigation helper for non-landing views
-  const showBackButton = currentView !== 'landing';
+  // Back button removed per UX request
 
   return (
     <div className="relative">
-      {showBackButton && (
-        <div className="fixed top-4 left-4 z-50">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentView('landing')}
-            className="bg-white/90 backdrop-blur-sm"
-          >
-            ← Back to Home
-          </Button>
-        </div>
-      )}
-      
-      {renderCurrentView()}
+  <Header onNavigate={setCurrentView} />
+  {renderCurrentView()}
     </div>
   );
 };

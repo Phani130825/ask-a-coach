@@ -14,7 +14,11 @@ import {
   ArrowRight
 } from "lucide-react";
 
-const ResumeTailoring = () => {
+type ResumeTailoringProps = {
+  resumeId?: string;
+};
+
+const ResumeTailoring = ({ resumeId }: ResumeTailoringProps) => {
   const [selectedTemplate, setSelectedTemplate] = useState<number>(1);
   const [improvementsMade, setImprovementsMade] = useState(false);
 
@@ -181,7 +185,8 @@ const ResumeTailoring = () => {
             <Card className="h-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Resume Preview</CardTitle>
+                        <CardTitle>Resume Preview</CardTitle>
+                        {resumeId && <div className="text-sm text-gray-500">Resume ID: {resumeId}</div>}
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4 mr-2" />

@@ -1,29 +1,53 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, CheckCircle, AlertCircle, Loader } from "lucide-react";
+import { resumeAPI, uploadFile } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 
-const ResumeUpload = () => {
+type ResumeUploadProps = {
+  onUploaded?: (resumeId: string) => void;
+};
+
+const ResumeUpload = ({ onUploaded }: ResumeUploadProps) => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [jobDescription, setJobDescription] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   const handleFileUpload = async (file: File) => {
+    if (!user) return;
+    
     setUploadStatus('uploading');
     setAnalysisProgress(0);
+    setUploadedFile(file);
     
-    // Simulate upload and analysis progress
-    const interval = setInterval(() => {
-      setAnalysisProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploadStatus('success');
-          return 100;
-        }
-        return prev + 10;
+    try {
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      // Use uploadFile to get real progress updates
+      const response = await uploadFile(file, (percent) => {
+        setAnalysisProgress(percent);
       });
-    }, 200);
+
+      setAnalysisProgress(100);
+      setUploadStatus('success');
+
+      // Expect resumeId in response.data.data.resumeId or data.resumeId
+      const resumeId = response?.data?.data?.resumeId || response?.data?.resumeId;
+      console.log('Resume uploaded successfully:', response.data);
+
+      if (resumeId && onUploaded) onUploaded(resumeId);
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      setUploadStatus('error');
+      setAnalysisProgress(0);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -83,7 +107,22 @@ const ResumeUpload = () => {
                     <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600 mb-4">Drag & drop your resume here, or click to browse</p>
                     <p className="text-sm text-gray-500 mb-4">Supports PDF, DOC, DOCX files</p>
-                    <Button variant="professional">Choose File</Button>
+                    <Button 
+                      variant="professional" 
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Choose File
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file);
+                      }}
+                      className="hidden"
+                    />
                   </>
                 )}
                 
@@ -135,12 +174,28 @@ Include:
 • Required skills and qualifications
 • Responsibilities and duties
 • Experience requirements"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
               />
               <div className="mt-4 flex justify-between items-center">
                 <p className="text-sm text-gray-500">
                   Include all relevant details for better analysis
                 </p>
-                <Button variant="professional">
+                <Button 
+                  variant="professional"
+                  disabled={!uploadedFile || !jobDescription.trim()}
+                  onClick={async () => {
+                    if (!uploadedFile || !jobDescription.trim()) return;
+                    
+                    try {
+                      // Here you would call the resume analysis API
+                      // For now, we'll just show success
+                      console.log('Analyzing resume match...');
+                    } catch (error) {
+                      console.error('Analysis failed:', error);
+                    }
+                  }}
+                >
                   Analyze Match
                 </Button>
               </div>
