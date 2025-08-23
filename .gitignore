@@ -50,3 +50,91 @@ Thumbs.db
 .vscode/
 .history/
 
+# Environment files (secrets)
+*.env
+.env.*
+backend/.env
+backend/*.env
+
+# Common large media and archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.iso
+*.img
+
+# Large media
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.mp3
+*.wav
+*.flac
+*.ogg
+
+# Large images / design files
+*.psd
+*.ai
+*.sketch
+*.xcf
+
+# Virtual environments and Python caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Docker
+docker-compose.override.yml
+**/docker-compose.override.yml
+**/Dockerfile
+
+# OS specific
+Desktop.ini
+ehthumbs.db
+
+# Git LFS placeholder files
+*.gitattributes
+
+# Node native binaries and caches
+**/node_modules/**/node_modules/**
+**/node_modules/**/bin/**
+**/node_modules/**/build/**
+**/node_modules/**/prebuild/**
+
+# Vite and webpack caches
+.cache/
+.parcel-cache/
+
+# Editor backups
+*~
+*.swp
+
+# Lockfiles (optional to track usually, but can be large in monorepos)
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# System temp
+/tmp
+/temp
+
+# Generated docs and coverage
+coverage/
+docs/
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+
+# Crash reports
+crash.log
+
+
