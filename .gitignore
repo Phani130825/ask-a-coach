@@ -22,3 +22,31 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build and dependency folders
+node_modules/
+backend/node_modules/
+dist/
+.vite/
+
+# Uploaded files and user data
+uploads/
+backend/uploads/
+uploads/**
+
+# Large binaries
+**/ffmpeg.exe
+**/ffmpeg-static/**
+
+# Cache and temp
+.cache/
+*.tmp
+.DS_Store
+
+# OS files
+Thumbs.db
+
+# Editor
+.vscode/
+.history/
+
