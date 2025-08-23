@@ -91,6 +91,11 @@ export default {
 					}
 				}
 			},
+			boxShadow: {
+				'elegant': '0 10px 30px -10px hsl(215 100% 50% / 0.3)',
+				'card': '0 4px 20px -4px hsl(215 28% 17% / 0.12)',
+				'premium': '0 20px 60px -10px hsl(254 88% 68% / 0.4)',
+			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
