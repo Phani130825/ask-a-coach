@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type HeaderProps = {
-  onNavigate?: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'login' | 'register') => void;
+  onNavigate?: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register') => void;
 };
 
 const Header = ({ onNavigate }: HeaderProps) => {

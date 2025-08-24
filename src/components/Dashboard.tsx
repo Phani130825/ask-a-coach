@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 interface DashboardProps {
-  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics') => void;
+  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings') => void;
 }
 
 const Dashboard = ({ onNavigate }: DashboardProps) => {

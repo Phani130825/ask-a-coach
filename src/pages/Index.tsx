@@ -7,12 +7,14 @@ import ResumeUpload from "@/components/ResumeUpload";
 import ResumeTailoring from "@/components/ResumeTailoring";
 import InterviewSimulation from "@/components/InterviewSimulation";
 import PerformanceAnalytics from "@/components/PerformanceAnalytics";
+import SchedulePractice from "@/components/SchedulePractice";
+import Settings from "@/components/Settings";
 import Login from "@/components/Login";
 import Register from "@/components/Register";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
-type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'login' | 'register';
+type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
@@ -47,6 +49,10 @@ const Index = () => {
         return <ResumeTailoring resumeId={activeResumeId ?? undefined} />;
       case 'interview':
         return <InterviewSimulation />;
+      case 'schedule':
+        return <SchedulePractice onStart={() => setCurrentView('interview')} />;
+      case 'settings':
+        return <Settings />;
       case 'analytics':
         return <PerformanceAnalytics />;
       default:
