@@ -212,15 +212,27 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
             <Card className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
               <div className="grid md:grid-cols-3 gap-4">
-                <Button variant="professional" className="h-auto p-6 flex-col gap-3">
+                <Button
+                  variant="professional"
+                  className="h-auto p-6 flex-col gap-3"
+                  onClick={() => onNavigate('interview')}
+                >
                   <Calendar className="h-6 w-6" />
                   <span>Schedule Practice</span>
                 </Button>
-                <Button variant="professional" className="h-auto p-6 flex-col gap-3">
+                <Button
+                  variant="professional"
+                  className="h-auto p-6 flex-col gap-3"
+                  onClick={() => onNavigate('interview')}
+                >
                   <Play className="h-6 w-6" />
                   <span>Quick Interview</span>
                 </Button>
-                <Button variant="professional" className="h-auto p-6 flex-col gap-3">
+                <Button
+                  variant="professional"
+                  className="h-auto p-6 flex-col gap-3"
+                  onClick={() => onNavigate('analytics')}
+                >
                   <Settings className="h-6 w-6" />
                   <span>Settings</span>
                 </Button>
