@@ -215,7 +215,7 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
                 <Button
                   variant="professional"
                   className="h-auto p-6 flex-col gap-3"
-                  onClick={() => onNavigate('interview')}
+                  onClick={() => onNavigate('schedule')}
                 >
                   <Calendar className="h-6 w-6" />
                   <span>Schedule Practice</span>
@@ -231,7 +231,7 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
                 <Button
                   variant="professional"
                   className="h-auto p-6 flex-col gap-3"
-                  onClick={() => onNavigate('analytics')}
+                  onClick={() => onNavigate('settings')}
                 >
                   <Settings className="h-6 w-6" />
                   <span>Settings</span>
