@@ -19,6 +19,7 @@ type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [activeResumeId, setActiveResumeId] = useState<string | null>(null);
+  const [activeInterviewId, setActiveInterviewId] = useState<string | null>(null);
   const { isAuthenticated, isLoading } = useAuth();
 
   // Handle authentication state changes
@@ -43,12 +44,33 @@ const Index = () => {
               setActiveResumeId(id);
               setCurrentView('tailoring');
             }}
+            onStartInterview={(interviewId: string) => {
+              setActiveInterviewId(interviewId);
+              setCurrentView('interview');
+            }}
           />
         );
       case 'tailoring':
-        return <ResumeTailoring resumeId={activeResumeId ?? undefined} />;
+        return (
+          <ResumeTailoring
+            resumeId={activeResumeId ?? undefined}
+            onStartInterview={(interviewId: string) => {
+              setActiveInterviewId(interviewId);
+              setCurrentView('interview');
+            }}
+          />
+        );
       case 'interview':
-        return <InterviewSimulation />;
+        return (
+          <InterviewSimulation
+            interviewId={activeInterviewId ?? undefined}
+            onComplete={(id?: string) => {
+              // after interview complete, show analytics
+              setActiveInterviewId(id ?? null);
+              setCurrentView('analytics');
+            }}
+          />
+        );
       case 'schedule':
         return <SchedulePractice onStart={() => setCurrentView('interview')} />;
       case 'settings':

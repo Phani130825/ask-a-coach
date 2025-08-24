@@ -3,19 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, CheckCircle, AlertCircle, Loader } from "lucide-react";
-import { resumeAPI, uploadFile } from "@/services/api";
+import { resumeAPI, uploadFile, interviewAPI } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 type ResumeUploadProps = {
   onUploaded?: (resumeId: string) => void;
+  onStartInterview?: (interviewId: string) => void;
 };
 
-const ResumeUpload = ({ onUploaded }: ResumeUploadProps) => {
+const ResumeUpload = ({ onUploaded, onStartInterview }: ResumeUploadProps) => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedResumeId, setUploadedResumeId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
@@ -40,9 +42,12 @@ const ResumeUpload = ({ onUploaded }: ResumeUploadProps) => {
 
       // Expect resumeId in response.data.data.resumeId or data.resumeId
       const resumeId = response?.data?.data?.resumeId || response?.data?.resumeId;
-      console.log('Resume uploaded successfully:', response.data);
+      console.log('Resume uploaded successfully:', response?.data);
 
-      if (resumeId && onUploaded) onUploaded(resumeId);
+      if (resumeId) {
+        setUploadedResumeId(resumeId);
+        if (onUploaded) onUploaded(resumeId);
+      }
     } catch (error: any) {
       console.error('Upload failed:', error);
       setUploadStatus('error');
@@ -225,7 +230,28 @@ Include:
                 </div>
               </div>
               <div className="mt-6 text-center">
-                <Button variant="hero" size="lg">
+                <Button
+                  variant="hero"
+                  size="lg"
+                  onClick={async () => {
+                    // If parent provided onStartInterview and a resume has been uploaded, create a quick interview
+                    if (onStartInterview && uploadedResumeId) {
+                      try {
+                        const created = await interviewAPI.create({ resumeId: uploadedResumeId, jobDescription: jobDescription || 'Quick practice', interviewType: 'technical', settings: { questionCount: 5, timeLimit: 5 } });
+                        const interviewId = created?.data?.data?.interview?.id || created?.data?.interview?.id;
+                        if (interviewId) onStartInterview(interviewId);
+                        return;
+                      } catch (err) {
+                        console.error('Create interview failed', err);
+                      }
+                    }
+
+                    // Fallback: navigate to tailoring by calling onUploaded -> parent handles navigation
+                    if (uploadedResumeId && onUploaded) {
+                      onUploaded(uploadedResumeId);
+                    }
+                  }}
+                >
                   Proceed to Resume Tailoring
                 </Button>
               </div>

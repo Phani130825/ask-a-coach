@@ -16,9 +16,10 @@ import {
 
 type ResumeTailoringProps = {
   resumeId?: string;
+  onStartInterview?: (interviewId: string) => void;
 };
 
-const ResumeTailoring = ({ resumeId }: ResumeTailoringProps) => {
+const ResumeTailoring = ({ resumeId, onStartInterview }: ResumeTailoringProps) => {
   const [selectedTemplate, setSelectedTemplate] = useState<number>(1);
   const [improvementsMade, setImprovementsMade] = useState(false);
 
@@ -303,7 +304,24 @@ const ResumeTailoring = ({ resumeId }: ResumeTailoringProps) => {
           <Button variant="outline" size="lg">
             Back to Upload
           </Button>
-          <Button variant="hero" size="lg" className="px-8">
+          <Button
+            variant="hero"
+            size="lg"
+            className="px-8"
+            onClick={async () => {
+              if (onStartInterview && resumeId) {
+                try {
+                  // create a short interview (5 questions, 5 minutes)
+                  const created = await (await import("@/services/api")).interviewAPI.create({ resumeId, jobDescription: 'Quick practice', interviewType: 'technical', settings: { questionCount: 5, timeLimit: 5 } });
+                  const interviewId = created?.data?.data?.interview?.id || created?.data?.interview?.id;
+                  if (interviewId) onStartInterview(interviewId);
+                  return;
+                } catch (err) {
+                  console.error('Create interview failed', err);
+                }
+              }
+            }}
+          >
             Proceed to Interview Simulation
             <ArrowRight className="h-5 w-5 ml-2" />
           </Button>

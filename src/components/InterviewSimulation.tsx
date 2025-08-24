@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-const InterviewSimulation = () => {
+const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string; onComplete?: (id?: string) => void }) => {
   const [interviewType, setInterviewType] = useState<'HR' | 'Managerial' | 'Technical'>('HR');
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -28,7 +28,9 @@ const InterviewSimulation = () => {
   const [micEnabled, setMicEnabled] = useState(true);
   const [interviewStarted, setInterviewStarted] = useState(false);
 
-  const questions = {
+  const [fetchedQuestions, setFetchedQuestions] = useState<any[] | null>(null);
+
+  const questions = fetchedQuestions ?? {
     HR: [
       "Tell me about yourself and why you're interested in this position.",
       "Describe a challenging situation you faced at work and how you handled it.",
@@ -51,6 +53,22 @@ const InterviewSimulation = () => {
       "How do you ensure code quality in your development process?"
     ]
   };
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      if (!interviewId) return;
+      try {
+        const api = (await import('@/services/api')).interviewAPI;
+        const resp = await api.getQuestions(interviewId);
+        const qs = resp?.data?.data?.questions || resp?.data?.questions;
+        if (qs) setFetchedQuestions(qs.map((q: any) => ({ question: q.question || q.text })));
+      } catch (err) {
+        console.error('Failed to load interview questions', err);
+      }
+    };
+
+    loadQuestions();
+  }, [interviewId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -87,6 +105,7 @@ const InterviewSimulation = () => {
     setIsRecording(false);
     setInterviewStarted(false);
     // Navigate to results
+  if (onComplete) onComplete(interviewId);
   };
 
   const togglePause = () => {
