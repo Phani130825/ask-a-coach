@@ -3,6 +3,12 @@ import User from '../models/User.js';
 
 export const authenticateToken = async (req, res, next) => {
   try {
+    // Ensure JWT secret is configured
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured in environment');
+      return res.status(500).json({ error: 'Server misconfiguration: JWT secret not set' });
+    }
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -12,11 +18,25 @@ export const authenticateToken = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtErr) {
+      // Map known JWT errors to 401 responses
+      if (jwtErr.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token expired. Please login again.' });
+      }
+      if (jwtErr.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Invalid token.' });
+      }
+      // Unknown JWT error
+      console.error('Unexpected JWT verification error:', jwtErr);
+      return res.status(500).json({ error: 'Internal server error during authentication.' });
+    }
+
     // Check if user still exists and is active
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({ 
         error: 'Invalid token. User not found.' 
@@ -32,22 +52,9 @@ export const authenticateToken = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        error: 'Token expired. Please login again.' 
-      });
-    }
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ 
-        error: 'Invalid token.' 
-      });
-    }
-    
-    console.error('Authentication error:', error);
-    return res.status(500).json({ 
-      error: 'Internal server error during authentication.' 
-    });
+    // Fallback - should rarely be hit because specific JWT errors are handled above
+    console.error('Authentication error (fallback):', error);
+    return res.status(500).json({ error: 'Internal server error during authentication.' });
   }
 };
 

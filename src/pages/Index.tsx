@@ -11,10 +11,11 @@ import SchedulePractice from "@/components/SchedulePractice";
 import Settings from "@/components/Settings";
 import Login from "@/components/Login";
 import Register from "@/components/Register";
+import PipelineDashboard from "@/components/PipelineDashboard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
-type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register';
+type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register' | 'pipelines';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
@@ -22,10 +23,36 @@ const Index = () => {
   const [activeInterviewId, setActiveInterviewId] = useState<string | null>(null);
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Handle authentication state changes
+  // Listen for cross-component navigation intents via localStorage
   useEffect(() => {
-    if (!isLoading && isAuthenticated && (currentView === 'login' || currentView === 'register')) {
-      setCurrentView('dashboard');
+    const applyNav = () => {
+      try {
+        const nav = window.localStorage.getItem('navigateTo');
+        if (nav) {
+          window.localStorage.removeItem('navigateTo');
+          setCurrentView(nav as AppView);
+        }
+      } catch (e) { /* ignore */ }
+    };
+    applyNav();
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'navigateTo' && e.newValue) {
+        setCurrentView(e.newValue as AppView);
+        try { window.localStorage.removeItem('navigateTo'); } catch (err) { /* ignore */ }
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
+  // Handle authentication state changes - only redirect to dashboard if no pending navigation
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && (currentView === 'login' || currentView === 'register' || currentView === 'landing')) {
+      // Check if there's a pending navigation before redirecting to dashboard
+      const pendingNav = window.localStorage.getItem('navigateTo');
+      if (!pendingNav) {
+        setCurrentView('dashboard');
+      }
     }
   }, [isAuthenticated, isLoading, currentView]);
 
@@ -37,7 +64,10 @@ const Index = () => {
         return <Register onSwitchToLogin={() => setCurrentView('login')} />;
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} />;
-      case 'upload':
+      case 'upload': {
+        // pick up resumeId handed via localStorage if present
+        const navId = typeof window !== 'undefined' ? window.localStorage.getItem('navResumeId') : null;
+        if (navId && !activeResumeId) setActiveResumeId(navId);
         return (
           <ResumeUpload
             onUploaded={(id: string) => {
@@ -50,7 +80,11 @@ const Index = () => {
             }}
           />
         );
-      case 'tailoring':
+      }
+      case 'tailoring': {
+        // pick up resumeId from localStorage if present (handoff from upload/dashboard)
+        const navId = typeof window !== 'undefined' ? window.localStorage.getItem('navResumeId') : null;
+        if (navId && !activeResumeId) setActiveResumeId(navId);
         return (
           <ResumeTailoring
             resumeId={activeResumeId ?? undefined}
@@ -60,7 +94,11 @@ const Index = () => {
             }}
           />
         );
-      case 'interview':
+      }
+      case 'interview': {
+        // pick up interviewId from localStorage if present
+        const navId = typeof window !== 'undefined' ? window.localStorage.getItem('navInterviewId') : null;
+        if (navId && !activeInterviewId) setActiveInterviewId(navId);
         return (
           <InterviewSimulation
             interviewId={activeInterviewId ?? undefined}
@@ -71,16 +109,19 @@ const Index = () => {
             }}
           />
         );
+      }
       case 'schedule':
         return <SchedulePractice onStart={() => setCurrentView('interview')} />;
       case 'settings':
         return <Settings />;
       case 'analytics':
         return <PerformanceAnalytics />;
+      case 'pipelines':
+        return <PipelineDashboard />;
       default:
         return (
           <div className="min-h-screen bg-white">
-            <Hero />
+            <Hero onNavigate={setCurrentView} />
             <Features />
             
             {/* Demo Dashboard Section */}
@@ -218,7 +259,9 @@ const Index = () => {
   return (
     <div className="relative">
   <Header onNavigate={setCurrentView} />
-  {renderCurrentView()}
+  <div className="pt-20">
+    {renderCurrentView()}
+  </div>
     </div>
   );
 };

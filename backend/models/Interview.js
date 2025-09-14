@@ -45,10 +45,9 @@ const interviewSchema = new mongoose.Schema({
     },
     expectedKeywords: [String],
     modelAnswer: String,
+    // Only store text transcripts and lightweight metadata. Do NOT persist raw audio/video URLs.
     userResponse: {
       text: String,
-      audioUrl: String,
-      videoUrl: String,
       duration: Number,
       confidence: Number
     },
@@ -152,11 +151,19 @@ interviewSchema.methods.endSession = function() {
 // Method to add question response
 interviewSchema.methods.addQuestionResponse = function(questionIndex, response, evaluation, nonVerbalAnalysis) {
   if (this.questions[questionIndex]) {
-    this.questions[questionIndex].userResponse = response;
+    // Ensure we only persist textual transcript and a couple small metadata fields.
+    const safeResponse = {};
+    if (response) {
+      safeResponse.text = typeof response === 'string' ? response : (response.text || '');
+      if (response.duration) safeResponse.duration = response.duration;
+      if (response.confidence) safeResponse.confidence = response.confidence;
+    }
+
+    this.questions[questionIndex].userResponse = safeResponse;
     this.questions[questionIndex].evaluation = evaluation;
     this.questions[questionIndex].nonVerbalAnalysis = nonVerbalAnalysis;
     this.questions[questionIndex].timestamp = new Date();
-    this.session.completedQuestions += 1;
+    this.session.completedQuestions = (this.session.completedQuestions || 0) + 1;
     this.metadata.lastModified = new Date();
   }
   return this.save();

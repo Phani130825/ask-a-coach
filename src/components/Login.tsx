@@ -57,6 +57,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
@@ -70,6 +71,7 @@ const Login = ({ onSwitchToRegister }: LoginProps) => {
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"

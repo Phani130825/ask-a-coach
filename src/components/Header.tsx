@@ -30,10 +30,7 @@ const Header = ({ onNavigate }: HeaderProps) => {
           {isAuthenticated && (
             <nav className="hidden md:flex items-center gap-6">
               <button onClick={() => onNavigate?.('dashboard')} className="text-gray-700 hover:text-brand-primary transition-colors">Dashboard</button>
-              <button onClick={() => onNavigate?.('upload')} className="text-gray-700 hover:text-brand-primary transition-colors">Upload</button>
-              <button onClick={() => onNavigate?.('tailoring')} className="text-gray-700 hover:text-brand-primary transition-colors">Tailoring</button>
-              <button onClick={() => onNavigate?.('interview')} className="text-gray-700 hover:text-brand-primary transition-colors">Interview</button>
-              <button onClick={() => onNavigate?.('analytics')} className="text-gray-700 hover:text-brand-primary transition-colors">Analytics</button>
+              <button onClick={() => onNavigate?.('analytics')} className="text-gray-700 hover:text-brand-primary transition-colors">Overall Analytics</button>
             </nav>
           )}
 
@@ -75,10 +72,7 @@ const Header = ({ onNavigate }: HeaderProps) => {
               {isAuthenticated ? (
                 <>
                   <button onClick={() => { onNavigate?.('dashboard'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Dashboard</button>
-                  <button onClick={() => { onNavigate?.('upload'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Upload</button>
-                  <button onClick={() => { onNavigate?.('tailoring'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Tailoring</button>
-                  <button onClick={() => { onNavigate?.('interview'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Interview</button>
-                  <button onClick={() => { onNavigate?.('analytics'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Analytics</button>
+                  <button onClick={() => { onNavigate?.('analytics'); setIsMenuOpen(false); }} className="text-gray-700 py-2 text-left">Overall Analytics</button>
                   <div className="flex flex-col gap-3 mt-4">
                     <div className="flex items-center gap-2 text-sm text-gray-700 py-2">
                       <User className="h-4 w-4" />

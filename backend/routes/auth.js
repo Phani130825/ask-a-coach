@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, authenticateToken } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = express.Router();
@@ -72,16 +72,22 @@ router.post('/register', asyncHandler(async (req, res) => {
     throw error;
   }
 
-  // Generate token
+  // Generate tokens
   const token = generateToken(user._id);
+  const refreshToken = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' } // Refresh token lasts 30 days
+  );
 
-  // Return user data (without password) and token
+  // Return user data (without password) and tokens
   res.status(201).json({
     success: true,
     message: 'User registered successfully',
     data: {
       user: user.getPublicProfile(),
-      token
+      token,
+      refreshToken
     }
   });
 }));
@@ -130,15 +136,21 @@ router.post('/login', asyncHandler(async (req, res) => {
   user.stats.lastActive = new Date();
   await user.save();
 
-  // Generate token
+  // Generate tokens
   const token = generateToken(user._id);
+  const refreshToken = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' } // Refresh token lasts 30 days
+  );
 
   res.json({
     success: true,
     message: 'Login successful',
     data: {
       user: user.getPublicProfile(),
-      token
+      token,
+      refreshToken
     }
   });
 }));
@@ -342,14 +354,21 @@ router.post('/logout', asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @desc    Get current user profile
 // @access  Private
-router.get('/me', asyncHandler(async (req, res) => {
+router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
   // This route will be protected by authenticateToken middleware
   // req.user will contain the authenticated user
-  
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'User not authenticated'
+    });
+  }
+
   res.json({
     success: true,
     data: {
-      user: req.user.getPublicProfile()
+      user: req.user.getPublicProfile ? req.user.getPublicProfile() : req.user
     }
   });
 }));

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Upload, 
-  Play, 
-  BarChart3, 
+import {
+  Upload,
+  Play,
+  BarChart3,
   Settings,
   Calendar,
   Trophy,
@@ -13,12 +14,71 @@ import {
   FileText,
   Video
 } from "lucide-react";
+import pipelineLib from '@/lib/pipeline';
+import { useAuth } from '@/contexts/AuthContext';
+
+function PipelineStatus({ onNavigate }: { onNavigate: (view: any) => void }) {
+  const [pipeline, setPipeline] = useState(() => {
+    try { return pipelineLib.getCurrentPipeline(); } catch(e) { return null; }
+  });
+
+  useEffect(() => {
+    const onStorage = () => setPipeline(pipelineLib.getCurrentPipeline());
+    window.addEventListener('storage', onStorage);
+    const interval = setInterval(() => setPipeline(pipelineLib.getCurrentPipeline()), 1000);
+    return () => { window.removeEventListener('storage', onStorage); clearInterval(interval); };
+  }, []);
+
+  if (!pipeline) {
+    return (
+      <div className="p-4 border rounded-xl text-sm text-gray-600">No active pipeline. Create one to begin.</div>
+    );
+  }
+
+  const stages = Object.keys(pipeline.stages || {});
+
+  return (
+    <div className="p-4 border rounded-xl">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <div className="font-semibold">Pipeline: {pipeline.type}</div>
+          <div className="text-xs text-gray-500">Created: {new Date(pipeline.createdAt).toLocaleString()}</div>
+        </div>
+        <div>
+          <Button variant="ghost" size="sm" onClick={() => { pipelineLib.clearPipeline(); setPipeline(null); }}>Clear</Button>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {stages.map((s) => (
+          <button key={s} aria-label={`Pipeline stage ${s}`} onClick={() => {
+            // Clicking jumps to the appropriate view and preserves resumeId
+            if (pipeline?.resumeId) {
+              try { window.localStorage.setItem('navResumeId', pipeline.resumeId); } catch(e) { }
+            }
+            switch (s) {
+              case 'uploaded': return onNavigate('upload');
+              case 'tailored': return onNavigate('tailoring');
+              case 'interview': return onNavigate('interview');
+              case 'analytics': return onNavigate('analytics');
+              default: return;
+            }
+          }} className={`p-2 rounded-xl text-center w-full text-left ${pipeline.stages[s] ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <div className="text-sm font-medium">{s}</div>
+            <div className="text-xs text-gray-500">{pipeline.stages[s] ? 'Done' : 'Pending'}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface DashboardProps {
-  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings') => void;
+  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'pipelines') => void;
 }
 
 const Dashboard = ({ onNavigate }: DashboardProps) => {
+  const { user } = useAuth();
+
   const modules = [
     {
       id: 1,
@@ -98,7 +158,7 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, Sarah! 👋
+            Welcome back, {user?.firstName || 'User'}! 👋
           </h1>
           <p className="text-gray-600">
             Continue your interview preparation journey
@@ -151,67 +211,32 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Preparation Modules */}
+            {/* Pipelines */}
             <Card className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Preparation Modules</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Pipelines</h2>
               <div className="space-y-4">
-                {modules.map((module) => (
-                  <div
-                    key={module.id}
-                    className="p-4 border border-gray-200 rounded-xl hover:border-brand-primary/30 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl ${getStatusColor(module.status)}`}>
-                          {module.icon}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{module.title}</h3>
-                          <p className="text-sm text-gray-600">{module.description}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500 mb-2">Est. {module.estimatedTime}</div>
-                        <Button
-                          variant={getButtonVariant(module.status)}
-                          size="sm"
-                          disabled={module.status === 'locked'}
-                          onClick={() => {
-                            if (module.status === 'ready') {
-                              switch (module.id) {
-                                case 1:
-                                  onNavigate('upload');
-                                  break;
-                                case 2:
-                                  onNavigate('tailoring');
-                                  break;
-                                case 3:
-                                  onNavigate('interview');
-                                  break;
-                                case 4:
-                                  onNavigate('analytics');
-                                  break;
-                              }
-                            }
-                          }}
-                        >
-                          {module.status === 'ready' ? 'Start' :
-                           module.status === 'completed' ? 'Review' : 'Locked'}
-                        </Button>
-                      </div>
-                    </div>
-                    {module.progress > 0 && (
-                      <Progress value={module.progress} className="h-2" />
-                    )}
-                  </div>
-                ))}
+                <div className="grid grid-cols-2 gap-4">
+                  <Button variant="hero" onClick={() => {
+                    pipelineLib.createPipeline('tailoring');
+                    // go to upload first so user can upload and preview before tailoring
+                    onNavigate('upload');
+                  }}>New Resume Tailoring</Button>
+                  <Button variant="professional" onClick={() => { 
+                    pipelineLib.createPipeline('interview');
+                    onNavigate('upload');
+                  }}>New Interview</Button>
+                </div>
+                <div className="pt-4">
+                  {/* Current pipeline status */}
+                  <PipelineStatus onNavigate={onNavigate} />
+                </div>
               </div>
             </Card>
 
             {/* Quick Actions */}
             <Card className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Button
                   variant="professional"
                   className="h-auto p-6 flex-col gap-3"
@@ -235,6 +260,14 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
                 >
                   <Settings className="h-6 w-6" />
                   <span>Settings</span>
+                </Button>
+                <Button
+                  variant="professional"
+                  className="h-auto p-6 flex-col gap-3"
+                  onClick={() => onNavigate('pipelines')}
+                >
+                  <FileText className="h-6 w-6" />
+                  <span>Pipeline Dashboard</span>
                 </Button>
               </div>
             </Card>

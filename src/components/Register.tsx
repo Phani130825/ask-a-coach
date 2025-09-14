@@ -90,6 +90,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               <Input
                 id="name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
@@ -103,6 +104,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
@@ -116,6 +118,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
@@ -129,6 +132,7 @@ const Register = ({ onSwitchToLogin }: RegisterProps) => {
               <Input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"

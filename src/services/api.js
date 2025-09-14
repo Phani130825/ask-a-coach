@@ -28,12 +28,42 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          // Attempt to refresh token
+          const response = await api.post('/auth/refresh', { refreshToken });
+          const { token } = response.data.data;
+
+          // Update token in localStorage
+          localStorage.setItem('token', token);
+
+          // Update Authorization header and retry original request
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh token invalid or expired, remove tokens and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // No refresh token available - this could be an old account
+        // For old accounts, we should redirect to login to get new tokens
+        console.warn('No refresh token available. This appears to be an old account that needs re-authentication.');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
     }
+
     return Promise.reject(error);
   }
 );
@@ -62,8 +92,17 @@ export const resumeAPI = {
   upload: (formData) => api.post('/resumes/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  // Upload resume text directly (JSON body: { resumeText: string })
+  uploadText: (data) => api.post('/resumes/upload-text', data),
   getAll: () => api.get('/resumes'),
   getById: (id) => api.get(`/resumes/${id}`),
+  // Preview can accept either multipart/form-data (file) or JSON { resumeText }
+  preview: (formData) => api.post('/resumes/preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  previewText: (data) => api.post('/resumes/preview', data),
+  // Accept parsed text from a trusted client and save to resume record
+  parseLocal: (id, data) => api.post(`/resumes/${id}/parse-local`, data),
   analyze: (id, jobDescription) => api.post(`/resumes/${id}/analyze`, { jobDescription }),
   tailor: (id, data) => api.post(`/resumes/${id}/tailor`, data),
   getTemplates: (id) => api.get(`/resumes/${id}/templates`),
@@ -150,3 +189,13 @@ export const handleAPIError = (error) => {
 };
 
 export default api;
+
+// Pipeline API
+export const pipelineAPI = {
+  create: (pipelineData) => api.post('/pipelines', pipelineData),
+  getAll: () => api.get('/pipelines'),
+  getById: (id) => api.get(`/pipelines/${id}`),
+  update: (id, updates) => api.put(`/pipelines/${id}`, updates),
+  delete: (id) => api.delete(`/pipelines/${id}`),
+  updateStage: (id, stageData) => api.patch(`/pipelines/${id}/stage`, stageData),
+};

@@ -2,6 +2,7 @@ import express from 'express';
 import Interview from '../models/Interview.js';
 import Resume from '../models/Resume.js';
 import aiService from '../services/aiService.js';
+import Pipeline from '../models/Pipeline.js';
 import { requirePremium } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { io } from '../server.js';
@@ -35,20 +36,31 @@ router.post('/create', asyncHandler(async (req, res) => {
     });
   }
 
-  if (resume.status !== 'analyzed') {
-    return res.status(400).json({
-      success: false,
-      error: 'Resume must be analyzed before creating an interview'
-    });
+  // Allow interview creation if resume has been parsed or analyzed
+  if (resume.status !== 'analyzed' && resume.status !== 'parsed') {
+    if (!resume.parsedData || !resume.parsedData.fullText) {
+      return res.status(400).json({
+        success: false,
+        error: 'Resume must be parsed before creating an interview'
+      });
+    }
   }
 
   try {
-    // Generate interview questions using AI
+    // Get optimized resume text if available
+    let optimizedResumeText = null;
+    if (resume.tailoredVersions && resume.tailoredVersions.length > 0) {
+      const latestTailored = resume.tailoredVersions[resume.tailoredVersions.length - 1];
+      optimizedResumeText = latestTailored.optimizedText;
+    }
+
+    // Generate interview questions using optimized resume text if available
     const questions = await aiService.generateInterviewQuestions(
       resume.parsedData,
       jobDescription,
       interviewType,
-      settings?.questionCount || 10
+      settings?.questionCount || 10,
+      optimizedResumeText
     );
 
     // Create interview session
@@ -71,6 +83,17 @@ router.post('/create', asyncHandler(async (req, res) => {
     });
 
     await interview.save();
+
+    // Mark interview stage in pipeline (tailoring pipeline progresses to interview)
+    try {
+      await Pipeline.findOneAndUpdate(
+        { user: req.user._id, resume: resumeId, type: 'tailoring' },
+        { $set: { 'stages.interview': true } },
+        { new: true }
+      );
+    } catch (e) {
+      console.warn('Failed to update pipeline stage interview:', e?.message || e);
+    }
 
     res.status(201).json({
       success: true,
@@ -313,6 +336,17 @@ router.post('/:id/end', asyncHandler(async (req, res) => {
       interview.session.duration
     );
 
+    // Mark analytics stage complete in pipeline
+    try {
+      await Pipeline.findOneAndUpdate(
+        { user: req.user._id, resume: interview.resume, type: 'tailoring' },
+        { $set: { 'stages.analytics': true } },
+        { new: true }
+      );
+    } catch (e) {
+      console.warn('Failed to update pipeline stage analytics:', e?.message || e);
+    }
+
     // Notify connected clients
     io.to(interview._id.toString()).emit('interview-completed', {
       interviewId: interview._id,
@@ -337,47 +371,66 @@ router.post('/:id/end', asyncHandler(async (req, res) => {
 // @desc    Upload interview recording
 // @access  Private
 router.post('/:id/recording', asyncHandler(async (req, res) => {
-  const { videoUrl, audioUrl, thumbnailUrl, duration, fileSize } = req.body;
+  // Accept a transcription text instead of raw audio/video per privacy requirement.
+  const { transcriptionText, duration } = req.body;
 
-  if (!videoUrl || !audioUrl) {
-    return res.status(400).json({
-      success: false,
-      error: 'Video and audio URLs are required'
-    });
+  if (!transcriptionText || typeof transcriptionText !== 'string') {
+    return res.status(400).json({ success: false, error: 'transcriptionText is required and must be text' });
   }
 
-  const interview = await Interview.findOne({
-    _id: req.params.id,
-    user: req.user._id
-  });
-
-  if (!interview) {
-    return res.status(404).json({
-      success: false,
-      error: 'Interview not found'
-    });
-  }
+  const interview = await Interview.findOne({ _id: req.params.id, user: req.user._id });
+  if (!interview) return res.status(404).json({ success: false, error: 'Interview not found' });
 
   try {
+    // Store only transcription text and lightweight metadata
     interview.recording = {
-      videoUrl,
-      audioUrl,
-      thumbnailUrl,
+      videoUrl: undefined,
+      audioUrl: undefined,
+      thumbnailUrl: undefined,
       duration: duration || 0,
-      fileSize: fileSize || 0
+      fileSize: 0
     };
+
+    // Also persist latest transcription to the last question if session active
+    if (interview.session && interview.session.completedQuestions >= 0) {
+      // attach as lastResponseSummary for quick access
+      interview.metadata = interview.metadata || {};
+      interview.metadata.lastTranscription = transcriptionText.substring(0, 2000);
+    }
 
     await interview.save();
 
-    res.json({
-      success: true,
-      message: 'Recording uploaded successfully',
-      data: {
-        recording: interview.recording
-      }
-    });
+    res.json({ success: true, message: 'Transcription saved (text only)', data: { interviewId: interview._id } });
   } catch (error) {
     throw error;
+  }
+}));
+
+// @route   POST /api/interviews/:id/tts
+// @desc    Generate text-to-speech audio for a given question (returns base64 audio). Does NOT store audio.
+// @access  Private
+router.post('/:id/tts', asyncHandler(async (req, res) => {
+  const { questionIndex, voice = 'default' } = req.body;
+
+  const interview = await Interview.findOne({ _id: req.params.id, user: req.user._id });
+  if (!interview) return res.status(404).json({ success: false, error: 'Interview not found' });
+
+  if (questionIndex === undefined || !interview.questions[questionIndex]) {
+    return res.status(400).json({ success: false, error: 'Valid questionIndex is required' });
+  }
+
+  const questionText = interview.questions[questionIndex].question;
+
+  // Use AI service placeholder to generate TTS; aiService may return base64 or null when unavailable
+  try {
+    const audioBase64 = await aiService.generateTTS(questionText, { voice });
+    if (!audioBase64) {
+      return res.status(503).json({ success: false, error: 'TTS not available' });
+    }
+    res.json({ success: true, data: { audioBase64 } });
+  } catch (err) {
+    console.error('TTS generation failed:', err);
+    res.status(500).json({ success: false, error: 'TTS generation failed' });
   }
 }));
 

@@ -13,7 +13,15 @@ const resumeSchema = new mongoose.Schema({
     size: Number,
     url: String
   },
+  originalText: {
+    type: String,
+    default: ''
+  },
   parsedData: {
+    fullText: {
+      type: String,
+      default: ''
+    },
     personalInfo: {
       name: String,
       email: String,
@@ -109,6 +117,10 @@ const resumeSchema = new mongoose.Schema({
       category: String,
       isPremium: Boolean
     },
+    matchScore: Number,
+    suggestions: [String],
+    optimizedText: String,
+    latexContent: String,
     createdAt: {
       type: Date,
       default: Date.now

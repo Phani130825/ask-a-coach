@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Play, Star, Users, Trophy } from "lucide-react";
 import heroImage from "@/assets/hero-interview.jpg";
 
-const Hero = () => {
+type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register' | 'pipelines';
+
+const Hero = ({ onNavigate }: { onNavigate?: (view: AppView) => void }) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
       {/* Background Animation Elements */}
@@ -35,7 +37,7 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="lg" className="text-lg px-8 py-4">
+              <Button variant="hero" size="lg" className="text-lg px-8 py-4" onClick={() => onNavigate?.('register')}>
                 Start Free Trial
               </Button>
               <Button variant="professional" size="lg" className="text-lg px-8 py-4">

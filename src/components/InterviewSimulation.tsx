@@ -1,22 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  Camera, 
-  Mic, 
-  MicOff, 
-  Video, 
+import {
+  Play,
+  Pause,
+  Square,
+  Camera,
+  Mic,
+  MicOff,
+  Video,
   VideoOff,
   Clock,
   User,
   Brain,
   AlertCircle
 } from "lucide-react";
+import { io, Socket } from 'socket.io-client';
+import pipelineLib from '@/lib/pipeline';
 
 const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string; onComplete?: (id?: string) => void }) => {
   const [interviewType, setInterviewType] = useState<'HR' | 'Managerial' | 'Technical'>('HR');
@@ -29,6 +31,8 @@ const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string
   const [interviewStarted, setInterviewStarted] = useState(false);
 
   const [fetchedQuestions, setFetchedQuestions] = useState<any[] | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   const questions = fetchedQuestions ?? {
     HR: [
@@ -80,6 +84,43 @@ const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string
     return () => clearInterval(interval);
   }, [isRecording, isPaused]);
 
+  // Socket.IO connection and event handling
+  useEffect(() => {
+    if (!interviewId) return;
+
+    const newSocket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000', {
+      transports: ['websocket', 'polling']
+    });
+
+    setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      console.log('Connected to server:', newSocket.id);
+      setIsConnected(true);
+      // Join the interview room
+      newSocket.emit('join-interview', interviewId);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      setIsConnected(false);
+    });
+
+    newSocket.on('response-received', (data) => {
+      console.log('Response received:', data);
+      // Handle real-time responses from other participants or server
+    });
+
+    newSocket.on('interview-update', (data) => {
+      console.log('Interview update:', data);
+      // Handle interview updates (e.g., new questions, time updates)
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [interviewId]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -91,10 +132,21 @@ const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string
     setIsRecording(true);
     setCurrentQuestion(0);
     setTimeElapsed(0);
+  try { pipelineLib.updateStage('interview', true); } catch(e) { /* ignore */ }
   };
 
   const nextQuestion = () => {
     if (currentQuestion < questions[interviewType].length - 1) {
+      // Send current response via socket before moving to next question
+      if (socket && isConnected) {
+        socket.emit('interview-response', {
+          interviewId,
+          questionIndex: currentQuestion,
+          question: questions[interviewType][currentQuestion],
+          response: '', // Add actual response data here
+          timestamp: new Date().toISOString()
+        });
+      }
       setCurrentQuestion(prev => prev + 1);
     } else {
       endInterview();
@@ -105,6 +157,7 @@ const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string
     setIsRecording(false);
     setInterviewStarted(false);
     // Navigate to results
+  try { pipelineLib.updateStage('analytics', true); } catch(e) { /* ignore */ }
   if (onComplete) onComplete(interviewId);
   };
 
@@ -274,6 +327,9 @@ const InterviewSimulation = ({ interviewId, onComplete }: { interviewId?: string
           <div className="flex items-center gap-4">
             <Badge className="bg-red-500 text-white animate-pulse">
               {isRecording && !isPaused ? 'RECORDING' : 'PAUSED'}
+            </Badge>
+            <Badge className={isConnected ? "bg-green-500 text-white" : "bg-yellow-500 text-white"}>
+              {isConnected ? 'CONNECTED' : 'CONNECTING...'}
             </Badge>
             <div className="flex items-center gap-2 text-white">
               <Clock className="h-4 w-4" />

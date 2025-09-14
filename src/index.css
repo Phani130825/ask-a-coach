@@ -204,3 +204,18 @@ All colors MUST be HSL.
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+/* Compatibility helpers */
+html, body {
+  /* Support text-size-adjust across browsers */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Support user-select on Safari */
+* {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Note: avoid animating 'height' inside @keyframes to prevent layout thrashing; prefer transform or opacity */
