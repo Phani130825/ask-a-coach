@@ -12,7 +12,7 @@ const STORAGE_KEY = 'currentPipeline';
 
 const defaultStages = (type: PipelineType) => {
   if (type === 'tailoring') return { uploaded: false, tailored: false };
-  return { uploaded: false, tailored: false, interview: false, analytics: false };
+  return { uploaded: false, tailored: false, aptitude: false, coding: false, interview: false, analytics: false };
 };
 
 export function createPipeline(type: PipelineType, resumeId?: string) {

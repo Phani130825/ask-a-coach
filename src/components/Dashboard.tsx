@@ -73,7 +73,7 @@ function PipelineStatus({ onNavigate }: { onNavigate: (view: any) => void }) {
 }
 
 interface DashboardProps {
-  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'pipelines') => void;
+  onNavigate: (view: 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'aptitude' | 'coding' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'pipelines') => void;
 }
 
 const Dashboard = ({ onNavigate }: DashboardProps) => {
@@ -232,6 +232,90 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
                 </div>
               </div>
             </Card>
+
+            {/* Separate Access - All Modules */}
+            {user && (
+              <Card className="p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Separate Access</h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  <div className="p-6 border rounded-xl bg-gradient-to-r from-blue-50 to-blue-100/50">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Resume Tailoring</h3>
+                        <p className="text-sm text-gray-600">AI-powered optimization matching your experience to job requirements</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="professional"
+                      className="w-full"
+                      onClick={() => onNavigate('tailoring')}
+                    >
+                      Access Resume Tailoring
+                    </Button>
+                  </div>
+
+                  <div className="p-6 border rounded-xl bg-gradient-to-r from-purple-50 to-purple-100/50">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <Target className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Aptitude Test</h3>
+                        <p className="text-sm text-gray-600">Test your logical and quantitative skills with AI-generated questions</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="professional"
+                      className="w-full"
+                      onClick={() => onNavigate('aptitude')}
+                    >
+                      Access Aptitude Test
+                    </Button>
+                  </div>
+
+                  <div className="p-6 border rounded-xl bg-gradient-to-r from-orange-50 to-orange-100/50">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Coding Round</h3>
+                        <p className="text-sm text-gray-600">Practice coding problems and algorithms for technical interviews</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="professional"
+                      className="w-full"
+                      onClick={() => onNavigate('coding')}
+                    >
+                      Access Coding Round
+                    </Button>
+                  </div>
+
+                  <div className="p-6 border rounded-xl bg-gradient-to-r from-green-50 to-green-100/50">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <Video className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Interview Simulation</h3>
+                        <p className="text-sm text-gray-600">Practice with AI interviewer in HR, Managerial, or Technical scenarios</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="professional"
+                      className="w-full"
+                      onClick={() => onNavigate('interview')}
+                    >
+                      Access Interview Simulation
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Quick Actions */}
             <Card className="p-6">

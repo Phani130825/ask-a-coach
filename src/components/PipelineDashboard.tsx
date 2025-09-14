@@ -55,8 +55,8 @@ const PipelineDashboard = () => {
   };
 
   const getStageProgress = (stages: any) => {
-    const totalStages = 2; // upload, tailoring_complete
-    const completedStages = Object.keys(stages || {}).filter(key => 
+    const totalStages = 6; // uploaded, tailored, aptitude, coding, interview, analytics
+    const completedStages = Object.keys(stages || {}).filter(key =>
       stages[key] === true && key !== 'completedAt'
     ).length;
     return (completedStages / totalStages) * 100;
@@ -162,8 +162,24 @@ const PipelineDashboard = () => {
                         <span className="text-sm">Resume Uploaded</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getStageStatus('tailoring_complete', pipeline.stages).icon}
-                        <span className="text-sm">Tailoring Complete</span>
+                        {getStageStatus('tailored', pipeline.stages).icon}
+                        <span className="text-sm">Resume Tailored</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStageStatus('aptitude', pipeline.stages).icon}
+                        <span className="text-sm">Aptitude Test</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStageStatus('coding', pipeline.stages).icon}
+                        <span className="text-sm">Coding Round</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStageStatus('interview', pipeline.stages).icon}
+                        <span className="text-sm">Interview Simulation</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStageStatus('analytics', pipeline.stages).icon}
+                        <span className="text-sm">Analysis</span>
                       </div>
                     </div>
 
@@ -183,12 +199,12 @@ const PipelineDashboard = () => {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 pt-2 flex-wrap">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          try { 
+                          try {
                             localStorage.setItem('navResumeId', pipeline.resume?._id || pipeline.resume?.id);
                             localStorage.setItem('navigateTo', 'tailoring');
                           } catch (e) { /* ignore */ }
@@ -197,13 +213,45 @@ const PipelineDashboard = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
-                      
-                      {pipeline.isComplete && (
+
+                      {pipeline.stages?.tailored && !pipeline.stages?.aptitude && (
                         <Button
                           variant="hero"
                           size="sm"
                           onClick={() => {
-                            try { 
+                            try {
+                              localStorage.setItem('navResumeId', pipeline.resume?._id || pipeline.resume?.id);
+                              localStorage.setItem('navigateTo', 'aptitude');
+                            } catch (e) { /* ignore */ }
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Start Aptitude Test
+                        </Button>
+                      )}
+
+                      {pipeline.stages?.aptitude && !pipeline.stages?.coding && (
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          onClick={() => {
+                            try {
+                              localStorage.setItem('navResumeId', pipeline.resume?._id || pipeline.resume?.id);
+                              localStorage.setItem('navigateTo', 'coding');
+                            } catch (e) { /* ignore */ }
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Start Coding Round
+                        </Button>
+                      )}
+
+                      {pipeline.stages?.coding && !pipeline.stages?.interview && (
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          onClick={() => {
+                            try {
                               localStorage.setItem('navResumeId', pipeline.resume?._id || pipeline.resume?.id);
                               localStorage.setItem('navigateTo', 'interview');
                             } catch (e) { /* ignore */ }
@@ -213,8 +261,24 @@ const PipelineDashboard = () => {
                           Start Interview
                         </Button>
                       )}
-                      
-                      {pipeline.isComplete && (
+
+                      {pipeline.stages?.interview && !pipeline.stages?.analytics && (
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          onClick={() => {
+                            try {
+                              localStorage.setItem('navResumeId', pipeline.resume?._id || pipeline.resume?.id);
+                              localStorage.setItem('navigateTo', 'analytics');
+                            } catch (e) { /* ignore */ }
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          View Analysis
+                        </Button>
+                      )}
+
+                      {pipeline.stages?.analytics && (
                         <Button
                           variant="outline"
                           size="sm"

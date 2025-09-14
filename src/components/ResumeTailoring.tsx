@@ -24,7 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type ResumeTailoringProps = {
   resumeId?: string;
-  onStartInterview?: (interviewId: string) => void;
+  onStartInterview?: (interviewId?: string) => void;
 };
 
 const ResumeTailoring = ({ resumeId, onStartInterview }: ResumeTailoringProps) => {
@@ -745,7 +745,7 @@ const ResumeTailoring = ({ resumeId, onStartInterview }: ResumeTailoringProps) =
             Back to Upload
           </Button>
 
-          {/* Always show Proceed to Interview for interview pipeline, Complete & View Analytics for tailoring pipeline */}
+          {/* Always show Proceed to Aptitude for interview pipeline, Complete & View Analytics for tailoring pipeline */}
           {currentPipeline?.type === 'interview' ? (
             <Button
               variant="hero"
@@ -763,26 +763,17 @@ const ResumeTailoring = ({ resumeId, onStartInterview }: ResumeTailoringProps) =
                     pipelineStage: 'tailoring_complete'
                   });
 
-                  // Create interview using the tailored resume
-                  const jobDescription = 'General role based on tailored resume'; // Could be enhanced to use actual JD
-                  const interviewResponse = await api.post('/interviews/create', {
-                    resumeId,
-                    jobDescription,
-                    interviewType: 'technical' // Default to technical, could be made configurable
-                  });
-
-                  if (interviewResponse.data.success) {
-                    const interviewId = interviewResponse.data.data.interview._id;
-                    // Navigate to interview simulation
-                    onStartInterview(interviewId);
+                  // Navigate to aptitude test
+                  if (onStartInterview) {
+                    onStartInterview();
                   }
                 } catch (e) {
-                  console.error('Failed to create interview:', e);
-                  alert('Failed to create interview. Please try again.');
+                  console.error('Failed to update pipeline:', e);
+                  alert('Failed to proceed. Please try again.');
                 }
               }}
             >
-              Proceed to Interview
+              Proceed to Aptitude Test
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
           ) : (

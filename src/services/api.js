@@ -198,4 +198,5 @@ export const pipelineAPI = {
   update: (id, updates) => api.put(`/pipelines/${id}`, updates),
   delete: (id) => api.delete(`/pipelines/${id}`),
   updateStage: (id, stageData) => api.patch(`/pipelines/${id}/stage`, stageData),
+  getAptitudeQuestions: () => api.get('/pipelines/aptitude-questions'),
 };

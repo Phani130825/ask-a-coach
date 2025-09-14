@@ -5,6 +5,8 @@ import Features from "@/components/Features";
 import Dashboard from "@/components/Dashboard";
 import ResumeUpload from "@/components/ResumeUpload";
 import ResumeTailoring from "@/components/ResumeTailoring";
+import Aptitude from "@/components/Aptitude";
+import CodingRound from "@/components/CodingRound";
 import InterviewSimulation from "@/components/InterviewSimulation";
 import PerformanceAnalytics from "@/components/PerformanceAnalytics";
 import SchedulePractice from "@/components/SchedulePractice";
@@ -15,7 +17,7 @@ import PipelineDashboard from "@/components/PipelineDashboard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
-type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register' | 'pipelines';
+type AppView = 'landing' | 'dashboard' | 'upload' | 'tailoring' | 'aptitude' | 'coding' | 'interview' | 'analytics' | 'schedule' | 'settings' | 'login' | 'register' | 'pipelines';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
@@ -88,8 +90,31 @@ const Index = () => {
         return (
           <ResumeTailoring
             resumeId={activeResumeId ?? undefined}
-            onStartInterview={(interviewId: string) => {
-              setActiveInterviewId(interviewId);
+            onStartInterview={() => {
+              setCurrentView('interview');
+            }}
+          />
+        );
+      }
+      case 'aptitude': {
+        // pick up resumeId from localStorage if present
+        const navId = typeof window !== 'undefined' ? window.localStorage.getItem('navResumeId') : null;
+        if (navId && !activeResumeId) setActiveResumeId(navId);
+        return (
+          <Aptitude
+            onProceed={() => {
+              setCurrentView('coding');
+            }}
+          />
+        );
+      }
+      case 'coding': {
+        // pick up resumeId from localStorage if present
+        const navId = typeof window !== 'undefined' ? window.localStorage.getItem('navResumeId') : null;
+        if (navId && !activeResumeId) setActiveResumeId(navId);
+        return (
+          <CodingRound
+            onProceed={() => {
               setCurrentView('interview');
             }}
           />
@@ -137,7 +162,7 @@ const Index = () => {
                   </p>
                 </div>
                 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
                   <Button
                     variant="hero"
                     size="lg"
