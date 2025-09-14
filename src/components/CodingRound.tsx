@@ -12,6 +12,7 @@ import {
   Trophy,
   ArrowRight
 } from "lucide-react";
+import { codingAPI } from "@/services/api";
 
 interface CodingRoundProps {
   onProceed?: () => void;
@@ -34,13 +35,21 @@ interface CodingQuestion {
   }[];
 }
 
+const languages = [
+  { id: 'javascript', name: 'JavaScript' },
+  { id: 'python', name: 'Python' },
+  { id: 'java', name: 'Java' },
+  { id: 'cpp', name: 'C++' }
+];
+
 const CodingRound = ({ onProceed }: CodingRoundProps) => {
   const [stage, setStage] = useState<'initial' | 'solving' | 'results'>('initial');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userCode, setUserCode] = useState('');
-  const [results, setResults] = useState<{ passed: boolean; output: string }[]>([]);
+  const [results, setResults] = useState<{ passed: boolean; output: string; expectedOutput?: string; input?: string }[]>([]);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(languages[0].id);
 
   // Sample coding questions
   const questions: CodingQuestion[] = [
@@ -103,20 +112,17 @@ const CodingRound = ({ onProceed }: CodingRoundProps) => {
 
   const runTests = async () => {
     setIsRunning(true);
-    // Simulate running tests
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const currentQ = questions[currentQuestion];
-    const testResults = currentQ.testCases.map((testCase, index) => {
-      // Simple simulation - in real app, this would execute the code
-      const passed = Math.random() > 0.3; // 70% pass rate for demo
-      return {
-        passed,
-        output: passed ? testCase.expectedOutput : 'Failed'
-      };
-    });
-
-    setResults(testResults);
+    try {
+      const currentQ = questions[currentQuestion];
+      const response = await codingAPI.runTests({
+        code: userCode,
+        language: selectedLanguage,
+        testCases: currentQ.testCases,
+      });
+      setResults(response.data.results);
+    } catch (error) {
+      setResults([{ passed: false, output: error.response?.data?.error || error.message || 'Error running tests', input: '', expectedOutput: '' }]);
+    }
     setIsRunning(false);
   };
 
@@ -262,8 +268,17 @@ const CodingRound = ({ onProceed }: CodingRoundProps) => {
             {/* Code Editor */}
             <div className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex items-center justify-between">
                   <CardTitle>Code Editor</CardTitle>
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    {languages.map(lang => (
+                      <option key={lang.id} value={lang.id}>{lang.name}</option>
+                    ))}
+                  </select>
                 </CardHeader>
                 <CardContent>
                   <textarea
@@ -285,20 +300,25 @@ const CodingRound = ({ onProceed }: CodingRoundProps) => {
                   <CardContent>
                     <div className="space-y-2">
                       {results.map((result, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2">
+                        <div key={index} className="p-3 rounded-lg border flex flex-col gap-1"
+                          style={{ borderColor: result.passed ? 'green' : 'red' }}>
+                          <div className="flex items-center justify-between">
                             {result.passed ? (
                               <CheckCircle className="h-5 w-5 text-green-500" />
                             ) : (
                               <XCircle className="h-5 w-5 text-red-500" />
                             )}
-                            <span className="text-sm font-medium">
-                              Test Case {index + 1}
+                            <span className={`text-sm font-medium ${result.passed ? 'text-green-600' : 'text-red-600'}`}>
+                              Test Case {index + 1} - {result.passed ? 'Passed' : 'Failed'}
                             </span>
                           </div>
-                          <span className={`text-sm ${result.passed ? 'text-green-600' : 'text-red-600'}`}>
-                            {result.passed ? 'Passed' : 'Failed'}
-                          </span>
+                          {!result.passed && (
+                            <div className="text-xs text-red-700">
+                              <div><strong>Input:</strong> {result.input}</div>
+                              <div><strong>Expected:</strong> {result.expectedOutput}</div>
+                              <div><strong>Got:</strong> {result.output}</div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

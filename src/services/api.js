@@ -200,3 +200,8 @@ export const pipelineAPI = {
   updateStage: (id, stageData) => api.patch(`/pipelines/${id}/stage`, stageData),
   getAptitudeQuestions: () => api.get('/pipelines/aptitude-questions'),
 };
+
+// Coding API
+export const codingAPI = {
+  runTests: (data) => api.post('/coding/run-tests', data),
+};

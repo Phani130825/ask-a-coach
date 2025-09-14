@@ -18,6 +18,7 @@ import interviewRoutes from './routes/interviews.js';
 import analyticsRoutes from './routes/analytics.js';
 import aiRoutes from './routes/ai.js';
 import pipelineRoutes from './routes/pipelines.js';
+import codingRoutes from './routes/coding.js';
 
 // Import middleware
 import { authenticateToken } from './middleware/auth.js';
@@ -82,6 +83,7 @@ app.use('/api/interviews', authenticateToken, interviewRoutes);
 app.use('/api/analytics', authenticateToken, analyticsRoutes);
 app.use('/api/ai', authenticateToken, aiRoutes);
 app.use('/api/pipelines', authenticateToken, pipelineRoutes);
+app.use('/api/coding', authenticateToken, codingRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
