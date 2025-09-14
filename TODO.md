@@ -1,31 +1,20 @@
-# TODO for Pipeline Navigation Fix
+# Pipeline Flow Fix - TODO
 
-## Information Gathered
+## Current Issue
 
-- There are two pipeline types: 'tailoring' (stages: uploaded, tailored) and 'interview' (stages: uploaded, tailored, interview, analytics)
-- ResumeUpload creates 'tailoring' pipeline by default
-- ResumeTailoring has navigation buttons that need to behave differently based on pipeline type
-- For interview pipeline: after tailoring, should navigate to interview section (stage 3), with option to view analytics below
-- For tailoring pipeline: after download/satisfaction, mark stages finished and exit to analytics
-- Commands use ';' instead of '&&' for PowerShell
+After resume tailoring, the pipeline skips aptitude and coding rounds, going directly to interview simulation.
 
-## Plan
+## Required Flow
 
-1. ✅ Modify ResumeUpload.tsx: In "Tailor Resume" button, change pipeline type to 'interview' if current is 'tailoring'
-2. ✅ Modify ResumeTailoring.tsx: Update action buttons to be conditional based on pipeline type
-   - For 'interview' pipeline: Show "Proceed to Interview" (creates interview and navigates) and "View Analytics" buttons
-   - For 'tailoring' pipeline: Show "Complete & View Analytics" (marks complete and navigates to analytics) and "Start Interview" buttons
-3. ✅ Ensure download button in ResumeTailoring marks pipeline stage correctly for tailoring pipeline
-4. Test the navigation flows
+uploaded → tailored → aptitude → coding → interview → analytics
 
-## Dependent Files
+## Tasks
 
-- ✅ a/src/components/ResumeUpload.tsx
-- ✅ a/src/components/ResumeTailoring.tsx
-
-## Followup Steps
-
-- Verify pipeline type changes correctly
-- Test interview pipeline creation and navigation to stage 3
-- Test tailoring pipeline completion and analytics navigation
-- Ensure backend handles pipeline stages properly
+- [x] Update Index.tsx to add 'aptitude' and 'coding' views
+- [x] Modify ResumeTailoring.tsx to navigate to aptitude instead of creating interview
+- [x] Create CodingRound.tsx component with navigation to interview
+- [x] Ensure Aptitude.tsx navigates to coding round
+- [x] Update pipeline stage updates throughout the flow
+- [ ] Test complete pipeline flow
+- [ ] Verify pipeline stages are updated correctly
+- [ ] Ensure navigation buttons work as a linked list
