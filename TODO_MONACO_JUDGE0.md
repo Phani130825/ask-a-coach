@@ -1,0 +1,6 @@
+- [ ] Install @monaco-editor/react in frontend
+- [ ] Update CodingRound.tsx to use MonacoEditor instead of textarea
+- [ ] Update starter code templates in CodingRound.tsx to read from stdin
+- [ ] Modify backend coding.js to use Judge0 API for code execution
+- [ ] Remove local execution functions
+- [ ] Test the implementation
