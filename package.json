@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -65,11 +66,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@codemirror/lang-stex": "^6.0.1",
-    "@codemirror/view": "^6.26.3",
+    "@codemirror/basic-setup": "^0.20.0",
     "@codemirror/state": "^6.4.1",
     "@codemirror/theme-one-dark": "^6.1.2",
-    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/view": "^6.26.3",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",

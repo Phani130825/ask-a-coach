@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,7 +13,9 @@ class AIService {
     });
     
     this.model = process.env.OPENAI_MODEL || 'gpt-4';
-    this.maxTokens = parseInt(process.env.OPENAI_MAX_TOKENS) || 4000;
+    this.maxTokens = parseInt(process.env.AI_MAX_TOKENS) || 4000;
+    this.geminiApiKey = process.env.GEMINI_API_KEY;
+    this.geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
   this.isAvailable = false;
   }
 

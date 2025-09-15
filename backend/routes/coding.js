@@ -1,11 +1,15 @@
 import express from 'express';
-import vm from 'node:vm';
+import axios from 'axios';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 
+const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
+const JUDGE0_API_HOST = 'judge0-ce.p.rapidapi.com';
+const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY; // Set your Judge0 API key in environment variables
+
 // @route   POST /api/coding/run-tests
-// @desc    Run code against test cases
+// @desc    Run code against test cases using Judge0 API
 // @access  Private
 router.post('/run-tests', asyncHandler(async (req, res) => {
   const { code, language, testCases } = req.body;
@@ -17,12 +21,19 @@ router.post('/run-tests', asyncHandler(async (req, res) => {
     });
   }
 
-  if (language !== 'javascript') {
+  if (!['javascript', 'python', 'cpp', 'java'].includes(language)) {
     return res.status(400).json({
       success: false,
-      error: 'Only JavaScript is supported at this time'
+      error: 'Only JavaScript, Python, C++, and Java are supported at this time'
     });
   }
+
+  const languageMap = {
+    javascript: 63, // JavaScript (Node.js 14.17.0)
+    python: 71,     // Python (3.8.1)
+    cpp: 54,        // C++ (GCC 9.2.0)
+    java: 62        // Java (OpenJDK 13.0.1)
+  };
 
   const results = [];
 
@@ -30,18 +41,33 @@ router.post('/run-tests', asyncHandler(async (req, res) => {
     try {
       const { input, expectedOutput } = testCase;
 
-      // Parse input arguments
-      const args = parseInput(input);
+      // Submit code to Judge0
+      const submissionResponse = await axios.post(
+        `${JUDGE0_API_URL}?base64_encoded=false&wait=true`,
+        {
+          source_code: code,
+          language_id: languageMap[language],
+          stdin: input,
+          expected_output: expectedOutput,
+          cpu_time_limit: 5,
+          memory_limit: 128000
+        },
+        {
+          headers: {
+            'X-RapidAPI-Host': JUDGE0_API_HOST,
+            'X-RapidAPI-Key': JUDGE0_API_KEY,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      // Execute code
-      const output = await executeJavaScript(code, args);
+      const submission = submissionResponse.data;
 
-      // Compare output
-      const passed = compareOutputs(output, expectedOutput);
+      const passed = submission.status && submission.status.id === 3; // 3 means Accepted
 
       results.push({
         passed,
-        output: JSON.stringify(output),
+        output: submission.stdout || submission.compile_output || submission.stderr || '',
         expectedOutput,
         input
       });
@@ -60,75 +86,5 @@ router.post('/run-tests', asyncHandler(async (req, res) => {
     results
   });
 }));
-
-// Helper function to parse input string into arguments array
-function parseInput(input) {
-  // Split by ', ' and try to parse each part
-  const parts = input.split(', ');
-  const args = [];
-
-  for (const part of parts) {
-    try {
-      // Try to parse as JSON
-      args.push(JSON.parse(part));
-    } catch {
-      // If not JSON, treat as string (remove quotes if present)
-      let str = part;
-      if (str.startsWith('"') && str.endsWith('"')) {
-        str = str.slice(1, -1);
-      }
-      args.push(str);
-    }
-  }
-
-  return args;
-}
-
-// Execute JavaScript code with arguments
-async function executeJavaScript(code, args) {
-  // Extract function name
-  const funcNameMatch = code.match(/function\s+(\w+)/);
-  if (!funcNameMatch) {
-    throw new Error('No function found in code');
-  }
-  const funcName = funcNameMatch[1];
-
-  // Wrap code in a function and call it
-  const wrappedCode = `
-    ${code}
-    ${funcName}(...args)
-  `;
-
-  const context = {
-    args,
-    console: { log: () => {}, error: () => {}, warn: () => {} }, // Disable console
-    setTimeout: () => {}, // Disable timers
-    setInterval: () => {},
-    clearTimeout: () => {},
-    clearInterval: () => {},
-    process: undefined,
-    global: undefined,
-    require: undefined,
-    __dirname: undefined,
-    __filename: undefined,
-  };
-
-  const script = new vm.Script(wrappedCode, { timeout: 5000 }); // 5 second timeout
-  const result = script.runInNewContext(context, { timeout: 5000 });
-
-  return result;
-}
-
-// Compare actual output with expected
-function compareOutputs(actual, expected) {
-  try {
-    const expectedParsed = JSON.parse(expected);
-    // Deep compare
-    return JSON.stringify(actual) === JSON.stringify(expectedParsed);
-  } catch {
-    // If expected is not JSON, compare as strings
-    return JSON.stringify(actual) === expected;
-  }
-}
 
 export default router;
